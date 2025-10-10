@@ -2,8 +2,8 @@
 LAMA - WEB
 
 
-Testaenderung - erstellt in Eclipse
+Willkommen zu unserem Studentenprojekt LAMA - Wir werden eine dynamische Webplattform eines Kosmetikstudios umsetzen.
 
--zweiter Test
+Aktueller Bearbeitungsschritt:
 
-test
+	- Erstellung eines HTML-Prototypen
