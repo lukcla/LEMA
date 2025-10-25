@@ -1,0 +1,78 @@
+/* --- Grundlayout --- */
+body {
+  margin: 0;
+  font-family: "Poppins", sans-serif;
+  background-color: #ffffff;
+  color: #333;
+}
+
+/* --- header --- */
+header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 60px;
+  background-color: white;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+}
+
+header .logo {
+  font-family: "Playfair Display", serif;
+  font-size: 12px;
+  font-weight: bold;
+}
+
+nav ul {
+  list-style: none;
+  display: flex;
+  gap: 30px;
+  margin: 0;
+  padding: 0;
+}
+
+nav a {
+  text-decoration: none;
+  color: #333;
+  font-weight: 500;
+}
+
+nav a:hover {
+  color: #e3a6a1;
+}
+
+/* --- main --- */
+main {
+  padding: 60px;
+  text-align: center;
+}
+
+/* --- footer --- */
+footer {
+  background-color: #e3a6a1;
+  color: white;
+  text-align: center;
+  padding: 30px 20px;
+  font-size: 14px;
+  margin-top: 60px;
+}
+
+footer a {
+  color: white;
+  text-decoration: underline;
+}
+
+/* --- buttons --- */
+button, .button {
+  background-color: #e3a6a1;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 30px;
+  cursor: pointer;
+  text-decoration: none;
+  display: inline-block;
+}
+
+button:hover, .button:hover {
+  background-color: #d18e89;
+}
