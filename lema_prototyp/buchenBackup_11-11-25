@@ -35,13 +35,11 @@
        amet.</p>
 
     <h3>Achtung: Keine Kartenzahlung möglich. Zahlung bitte vor Ort</h3>
-    
-    <!-- Aenderung zu einem gemeinsamen Formular -->
-	<form action="bestaetigung.html" method="get">
+
       <div class="buchungsbereich">
       <!-- Linke Seite -->
       <section class="kundendaten">
-        
+        <form>
           <label>Vorname:</label>
           <input type="text" placeholder="z. B. Maria">
 
@@ -53,7 +51,7 @@
 
           <label>Telefon:</label>
           <input type="tel" placeholder="0711 1234567">
-       
+        </form>
       </section>
 
       <!-- Rechte Seite -->
@@ -75,13 +73,13 @@
         </div>
 
         <input type="hidden" id="selectedTime" name="selectedTime">
-        
+        <form>
 
-        
+        </form>
       </section>
     </div>
 
-    
+    <form action="bestaetigung.html" method="get">
     <button type="submit" style="margin-top: 50px;">Jetzt buchen</button>
     </form>
   </main>
@@ -94,14 +92,6 @@
       <p>&copy; 2025 made by LEMA</p>
     </div>
   </footer>
-  
-  
-<script>
-  // Beim Laden heutiges Datum ermitteln (YYYY-MM-DD)
-  const today = new Date().toISOString().split('T')[0];
-  const dateInput = document.getElementById('date');
-  dateInput.min = today;
-</script>
 
 </body>
 </html>
