@@ -2,7 +2,7 @@
 LAMA - WEB
 
 
-Willkommen zu unserem Studentenprojekt LAMA - Wir werden eine dynamische Webplattform eines Kosmetikstudios umsetzen.
+Willkommen zu unserem Studentenprojekt LEMA - Wir werden eine dynamische Webplattform eines Kosmetikstudios umsetzen.
 
 Aktueller Bearbeitungsschritt:
 
