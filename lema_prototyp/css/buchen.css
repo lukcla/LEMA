@@ -1,0 +1,96 @@
+/* --- ab hier kommt die Buchungsseite (Formular + Details) --- */
+.buchungsbereich {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  gap: 60px;
+  flex-wrap: wrap;
+  margin-top: 40px;
+  text-align: left;
+}
+
+/* Linke Seite: Formular */
+.kundendaten {
+  flex: 1;
+  min-width: 320px;
+  max-width: 450px;
+  background-color: #f9f9f9;
+  padding: 30px;
+  border-radius: 10px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+}
+
+.kundendaten label {
+  display: block;
+  margin-top: 15px;
+  font-weight: 500;
+  font-size: 18px;
+}
+
+.kundendaten input,
+.kundendaten select {
+  width: 100%;
+  padding: 10px;
+  margin-top: 5px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 15px;
+  font-family: "Poppins", sans-serif;
+}
+
+.kundendaten input:focus,
+.kundendaten select:focus {
+  outline: none;
+  border-color: #e3a6a1;
+  box-shadow: 0 0 4px rgba(227, 166, 161, 0.5);
+}
+
+.kundendaten .info {
+  font-size: 13px;
+  color: #777;
+  margin-top: 10px;
+}
+
+/* Rechte Seite: Buchungsdetails */
+.buchungsdetails {
+  flex: 1;
+  min-width: 300px;
+  max-width: 400px;
+  background-color: #fff;
+  padding: 30px;
+  border-radius: 10px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+}
+
+.buchungsdetails p {
+  margin: 8px 0;
+}
+.buchungsdetails label {
+    font-size: 18px;
+}
+
+/* radiobuttons */
+.timeslots {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.timeslots input {
+  display: none; /* Radio-Buttons verstecken */
+}
+
+.timeslots label {
+  padding: 10px;
+  border: 2px solid #ccc;
+  border-radius: 8px;
+  cursor: pointer;
+  text-align: center;
+  flex: 1 1 calc(33% - 10px);
+}
+
+.timeslots input:checked + label {
+  border-color: black; 
+  background-color: #d18e89; 
+}
