@@ -4,12 +4,14 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>LEMA Beauty</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Chiron+Sung+HK:ital,wght@0,200..900;1,200..900&family=EB+Garamond:ital,wght@0,400..800;1,400..800&display=swap" 
-  rel="stylesheet">
+
   <link rel="stylesheet" href="css/beispiel-style.css" />
   <link rel="stylesheet" href="css/buchen.css" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Chiron+Sung+HK:wght@200;400;600;900&family=EB+Garamond:wght@400;600;700&display=swap" rel="stylesheet">
+
 </head>
 
 <body>
@@ -26,81 +28,257 @@
     </nav>
   </header>
 
-
-  <main>
+<main>
     <h1>Termin buchen</h1>
-    <p>Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt 
-       ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo 
-       dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit 
-       amet.</p>
+    <p>Bitte wählen Sie Ihren gewünschten Termin. Wir freuen uns darauf, Ihnen eine wohltuende Behandlung zu ermöglichen.</p>
+    <h2>Achtung: Die Zahlung erfolgt ausschließlich vor Ort, bequem in bar oder mit Karte.</h2>
 
-    <h3>Achtung: Keine Kartenzahlung möglich. Zahlung bitte vor Ort</h3>
-    
-    <!-- Aenderung zu einem gemeinsamen Formular -->
-	<form action="bestaetigung.html" method="get">
-      <div class="buchungsbereich">
-      <!-- Linke Seite -->
-      <section class="kundendaten">
-        
-          <label>Vorname:</label>
-          <input type="text" placeholder="z. B. Maria">
+    <!-- Leistungsdetails -->
+    <section class="leistungsdetails-box">
+      <h2>Ihre gewählte Behandlung</h2>
 
-          <label>Nachname:</label>
-          <input type="text" placeholder="z. B. Lehmann">
+      <p><span id="leistung-name"></span></p>
+      <p><span id="leistung-beschreibung"></span></p>
+      <p><strong>Dauer:</strong> <span id="leistung-dauer"></span></p>
+      <p><strong>Preis:</strong> <span id="leistung-preis"></span></p>
 
-          <label>E-Mail:</label>
-          <input type="email" placeholder="maria@example.com">
+      <!-- Hidden Inputs -->
+      <input type="hidden" name="leistungName" id="leistungName_hidden">
+      <input type="hidden" name="leistungBeschreibung" id="leistungBeschreibung_hidden">
+      <input type="hidden" name="leistungDauer" id="leistungDauer_hidden">
+      <input type="hidden" name="leistungPreis" id="leistungPreis_hidden">
+    </section>
 
-          <label>Telefon:</label>
-          <input type="tel" placeholder="0711 1234567">
-       
-      </section>
 
-      <!-- Rechte Seite -->
-      <section class="buchungsdetails">
-        <p>Bitte wählen Sie Datum und Uhrzeit aus.</p>
-        <label for="date">Datum wählen:</label>
-        <input type="date" id="date" name="date" required>
+<!-- EIN gemeinsames Formular -->
+<form action="bestaetigung.html" method="get" id="buchungsForm">
 
-        <label>Verfügbare Zeitslots:</label>
-        <div class="timeslots">
-        <input type="radio" id="slot1" name="timeslot" value="09:00 - 09:30">
-        <label for="slot1">09:00 - 09:30</label>
+  <div class="buchungsbereich">
 
-        <input type="radio" id="slot2" name="timeslot" value="09:30 - 10:00">
-        <label for="slot2">09:30 - 10:00</label>
+    <!-- Linke Seite -->
+    <div class="kundendaten">
+      <h2>Ihre Daten</h2>
 
-        <input type="radio" id="slot3" name="timeslot" value="10:00 - 10:30">
-        <label for="slot3">10:00 - 10:30</label>
+      <label>Vorname</label>
+      <input type="text" name="vorname" required>
+
+      <label>Nachname</label>
+      <input type="text" name="nachname" required>
+
+      <label>E-Mail</label>
+      <input type="email" name="email" required>
+
+      <label>Telefonnummer</label>
+      <input type="tel" name="telefon" required>
+
+      <input type="hidden" id="selectedDate" name="date">
+      <input type="hidden" id="selectedTime" name="time">
+      <input type="hidden" id="dauerHidden" name="dauer">
+    </div>
+
+
+    <!-- Rechte Seite: Kalender -->
+    <div class="buchungsdetails">
+      <h2>Datum & Uhrzeit wählen</h2>
+
+      <div class="kalender-container">
+        <div class="kalender-header">
+          <button class="nav-btn" id="prevMonth">❮</button>
+          <h3 id="monthYear"></h3>
+          <button class="nav-btn" id="nextMonth">❯</button>
         </div>
 
-        <input type="hidden" id="selectedTime" name="selectedTime">
-        
+        <div class="wochentage">
+          <div>Mo</div><div>Di</div><div>Mi</div><div>Do</div><div>Fr</div><div>Sa</div><div>So</div>
+        </div>
 
-        
-      </section>
-    </div>
+        <div class="tage" id="kalenderTage"></div>
+      </div>
 
-    
-    <button type="submit" style="margin-top: 50px;">Jetzt buchen</button>
-    </form>
-  </main>
-    
-  
-  <footer>
-    <div class="footer-content">
-      <p>LEMA Beauty / Fantasiestr. 1 / 70182 Stuttgart</p>
-      <p>Tel: 0711 1234567 / <a href="impressum.html">Impressum</a></p>
-      <p>&copy; 2025 made by LEMA</p>
+      <label>Verfügbare Zeiten:</label>
+      <div id="slot-grid" class="timeslots"></div>
+
+      <!-- Jetzt buchen -->
+      <button id="submitBtn"
+              type="submit"
+              disabled
+              style="opacity:0.4; cursor:not-allowed;
+              width:100%; margin-top:20px; padding:14px;
+              border:none; background:#d18e89; color:white;
+              font-size:17px; border-radius:10px;">
+              Jetzt buchen
+      </button>
+
     </div>
-  </footer>
-  
-  
+  </div>
+
+</form> 
+</main>
+
+
+<footer>
+  <div class="footer-content">
+    <p>LEMA Beauty / Fantasiestr. 1 / 70182 Stuttgart</p>
+    <p>Tel: 0711 1234567 / <a href="impressum.html">Impressum</a></p>
+    <p>&copy; 2025 made by LEMA</p>
+  </div>
+</footer>
+
+
+
 <script>
-  // Beim Laden heutiges Datum ermitteln (YYYY-MM-DD)
-  const today = new Date().toISOString().split('T')[0];
-  const dateInput = document.getElementById('date');
-  dateInput.min = today;
+// ----------------------
+//    URL PARAMS LADEN
+// ----------------------
+function getParam(n){ return new URLSearchParams(window.location.search).get(n);} 
+
+const leistungName = getParam("name") || "";
+const leistungBeschreibung = getParam("beschreibung") || "";
+const leistungDauer = getParam("dauer") || "";
+const leistungPreis = getParam("preis") || "";
+
+document.getElementById("leistung-name").textContent = leistungName;
+document.getElementById("leistung-beschreibung").textContent = leistungBeschreibung;
+document.getElementById("leistung-dauer").textContent = leistungDauer;
+document.getElementById("leistung-preis").textContent = leistungPreis;
+
+document.getElementById("leistungName_hidden").value = leistungName;
+document.getElementById("leistungBeschreibung_hidden").value = leistungBeschreibung;
+document.getElementById("leistungDauer_hidden").value = leistungDauer;
+document.getElementById("leistungPreis_hidden").value = leistungPreis;
+
+
+// Slot-Dauer: 30 oder 60
+let serviceDuration = leistungDauer.includes("30") ? 30 : 60;
+document.getElementById("dauerHidden").value = serviceDuration;
+
+
+// ----------------------
+//       KALENDER
+// ----------------------
+let today = new Date(); today.setHours(0,0,0,0);
+let currentMonth = today.getMonth();
+let currentYear = today.getFullYear();
+
+const kalenderTage = document.getElementById("kalenderTage");
+const monthYear = document.getElementById("monthYear");
+let selectedDate = null;
+
+const bookedDays = {}; // später aus DB
+
+
+function renderCalendar(){
+  kalenderTage.innerHTML = "";
+
+  const first = new Date(currentYear, currentMonth, 1);
+  const last = new Date(currentYear, currentMonth+1, 0);
+
+  monthYear.textContent = first.toLocaleString("de-DE", { month:"long", year:"numeric"});
+
+  const offset = (first.getDay()+6)%7;
+  for(let i=0;i<offset;i++){
+    kalenderTage.appendChild(document.createElement("div"));
+  }
+
+  for(let d=1; d<=last.getDate(); d++){
+    const date = new Date(currentYear, currentMonth, d);
+    const el = document.createElement("div");
+    el.textContent = d;
+    el.classList.add("tag");
+
+    const iso = date.toISOString().split("T")[0];
+    const isPast = date <= today;
+    const isToday = date.getTime() === today.getTime();
+    const isSunday = date.getDay() === 0;
+    const isBooked = bookedDays[iso];
+
+    if(isPast || isSunday || isToday || isBooked){
+      el.classList.add("disabled");
+    } else {
+      el.classList.add("verfuegbar");
+      el.addEventListener("click", ()=> selectDate(date, el));
+    }
+
+    kalenderTage.appendChild(el);
+  }
+}
+
+
+function selectDate(date, el){
+  document.querySelectorAll(".tag").forEach(t => t.classList.remove("selected"));
+  el.classList.add("selected");
+
+  selectedDate = date;
+  document.getElementById("selectedDate").value = date.toISOString().split("T")[0];
+
+  renderSlots();
+}
+
+
+
+// ----------------------
+//       ZEITSLOTS
+// ----------------------
+function renderSlots(){
+  const grid = document.getElementById("slot-grid");
+  grid.innerHTML = "";
+
+  let slots = [];
+  for(let h=10; h<18; h++){
+    for(let m=0; m<60; m+=serviceDuration){
+      let end = h + m/60 + serviceDuration/60;
+      if(end <= 18){
+        slots.push(`${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`);
+      }
+    }
+  }
+
+  slots.forEach(time => {
+    const id = "slot_" + time.replace(":", "");
+
+    const input = document.createElement("input");
+    input.type = "radio";
+    input.name = "slotRadio";
+    input.value = time;
+    input.id = id;
+
+    const label = document.createElement("label");
+    label.textContent = time;
+    label.setAttribute("for", id);
+
+    input.addEventListener("change", () => {
+        document.getElementById("selectedTime").value = time;
+
+        const btn = document.getElementById("submitBtn");
+        btn.disabled = false;
+        btn.style.opacity = "1";
+        btn.style.cursor = "pointer";
+    });
+
+    grid.appendChild(input);
+    grid.appendChild(label);
+  });
+}
+
+
+// Navigation
+document.getElementById("nextMonth").onclick = ()=>{
+  currentMonth++;
+  if(currentMonth>11){ currentMonth=0; currentYear++; }
+  renderCalendar();
+};
+
+document.getElementById("prevMonth").onclick = ()=>{
+  const isCurrent = currentMonth===today.getMonth() && currentYear===today.getFullYear();
+  if(!isCurrent){
+    currentMonth--;
+    if(currentMonth<0){ currentMonth=11; currentYear--; }
+    renderCalendar();
+  }
+};
+
+
+renderCalendar();
 </script>
 
 </body>
