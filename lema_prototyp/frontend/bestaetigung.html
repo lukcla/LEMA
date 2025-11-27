@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LEMA Beauty</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Chiron+Sung+HK:ital,wght@0,200..900;1,200..900&family=EB+Garamond:ital,wght@0,400..800;1,400..800&display=swap" 
+  rel="stylesheet">
+  <link rel="stylesheet" href="css/beispiel-style.css" />
+</head>
+
+<body>
+  <header>
+    <div class="logo">
+      <img src="img/logo.png" alt="Firmenlogo">
+    </div>
+    <nav>
+      <ul>
+        <li><a href="index.html">Start</a></li>
+        <li><a href="leistungen.html">Leistungen</a></li>
+        <li><a href="kontakt.html">Kontakt</a></li>
+      </ul>
+    </nav>
+  </header>
+
+
+  <main>
+  <h1>Vielen Dank für Ihre Buchung!</h1>
+
+  <h2>Ihre Buchungsdetails</h2>
+  <p><strong>Name:</strong> <span id="fullname"></span></p>
+  <p><strong>E-Mail:</strong> <span id="email"></span></p>
+  <p><strong>Telefon:</strong> <span id="telefon"></span></p>
+  <p><strong>Datum:</strong> <span id="datum"></span></p>
+  <p><strong>Uhrzeit:</strong> <span id="uhrzeit"></span></p>
+  <p><strong>Dauer:</strong> <span id="dauer"></span> Minuten</p>
+</main>
+
+
+
+
+
+  <footer>
+    <div class="footer-content">
+      <p>LEMA Beauty / Königstraße 1 / 70173 Stuttgart</p>
+      <p>Tel: 0711 1234567 / <a href="impressum.html">Impressum</a></p>
+      <p>&copy; 2025 made by LEMA</p>
+    </div>
+  </footer>
+
+
+<script>
+async function loadBooking() {
+  const params = new URLSearchParams(window.location.search);
+  const id = params.get("bookingId");
+
+  if (!id) return;
+
+  const response = await fetch("/api/booking/" + id);
+  const data = await response.json();
+
+  document.getElementById("fullname").textContent =
+    data.vorname + " " + data.nachname;
+
+  document.getElementById("email").textContent = data.email;
+  document.getElementById("telefon").textContent = data.telefon;
+
+  document.getElementById("datum").textContent = data.datum;
+  document.getElementById("uhrzeit").textContent = data.uhrzeit;
+  document.getElementById("dauer").textContent = data.dauer;
+}
+
+document.addEventListener("DOMContentLoaded", loadBooking);
+</script>
+
+
+  
+</body>
+</html>
