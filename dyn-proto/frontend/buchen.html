@@ -52,7 +52,7 @@
 
 
 <!-- EIN gemeinsames Formular -->
-<form id="bookingForm">
+  <form id="bookingForm">  
   <div class="buchungsbereich">
 
     <!-- Linke Seite -->
@@ -98,15 +98,15 @@
       <label>Verfügbare Zeiten:</label>
       <div id="slot-grid" class="timeslots"></div>
 
-      <!-- Jetzt buchen -->
       <button id="submitBtn"
-              type="submit"
-              disabled
-              style="opacity:0.4; cursor:not-allowed;
-              width:100%; margin-top:20px; padding:14px;
-              border:none; background:#d18e89; color:white;
-              font-size:17px; border-radius:10px;">
-              Jetzt buchen
+          type="button"
+          onclick="submitBooking(event)"
+          disabled
+          style="opacity:0.4; cursor:not-allowed;
+          width:100%; margin-top:20px; padding:14px;
+          border:none; background:#d18e89; color:white;
+          font-size:17px; border-radius:10px;">
+          Jetzt buchen
       </button>
 
     </div>
@@ -305,6 +305,7 @@ function renderSlots(dateStr, blockedTimes) {
 // formular absenden
 async function submitBooking(event) {
   event.preventDefault();
+  console.log("🎯 submitBooking WIRD ausgeführt!");
 
   const vorname = document.querySelector('input[name="vorname"]').value;
   const nachname = document.querySelector('input[name="nachname"]').value;
@@ -357,8 +358,8 @@ async function submitBooking(event) {
 
 // seite initialisieren
 document.addEventListener("DOMContentLoaded", () => {
-  loadLeistung();
-  document.getElementById("bookingForm").addEventListener("submit", submitBooking);
+  loadLeistung();          // Leistung laden
+  renderCalendar();        // Kalender zeichnen
 });
 
 
@@ -378,7 +379,6 @@ document.getElementById("prevMonth").onclick = ()=>{
   }
 };
 
-renderCalendar();
 </script>
 
 
