@@ -3,13 +3,13 @@ const router = express.Router();
 
 const bookingService = require('../services/booking.service');
 
-// Slots für ein Datum + Leistung abrufen
+// Slots holen
 router.get('/slots', bookingService.getSlots);
 
-// Neue Buchung speichern
+// Buchung speichern
 router.post('/', bookingService.createBooking);
 
-// Buchung nach ID abrufen
+// Buchung anzeigen
 router.get('/:id', bookingService.getBookingById);
 
 module.exports = router;
@@ -17,4 +17,4 @@ module.exports = router;
 
 // was passiert jetzt? user klickt auf ein datum, frontend ruft "/api/booking/slots?date=..." auf,
 // backend liefert so was wie: { "booked": ["14:00", "15:30"] }
-// frontend kann dann diese slots/buttons deaktivieren
+// // frontend kann dann diese slots/buttons deaktivieren

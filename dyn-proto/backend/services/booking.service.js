@@ -152,31 +152,72 @@ exports.getBookingById = (req, res, next) => {
 };
 
 
-exports.getSlotsForDate = (req, res, next) => {
-  try {  
-  const date = req.query.date;
 
-  if (!date) {
-    return res.status(400).json({ error: "date parameter required (YYYY-MM-DD)" });
-  
-  }
+// Neue Slot-API: Dauer-Behandlung + 15 Min Puffer
 
-  // einfache Datumsprüfung
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
-    return res.status(400).json({ error: "Invalid date format (YYYY-MM-DD expected)" });
-  }
+exports.getSlots = (req, res, next) => {
+  try {
+    const date = req.query.date;
+    const leistungId = req.query.leistung_id;
 
-  // bookings des Tages holen
-  const bookings = bookingDao.getByDate(date);
+    if (!date || !leistungId) {
+      return res.status(400).json({ error: "date und leistung_id erforderlich" });
+    }
 
-  // Uhrzeiten extrahieren
-  const bookedTimes = bookings.map(entry => {
-    const d = new Date(entry.datetime);
-    return d.toISOString().slice(11, 16); // HH:MM
-  });
+    const leistung = leistungDao.getById(leistungId);
+    if (!leistung) {
+      return res.status(404).json({ error: "Leistung nicht gefunden" });
+    }
 
-  res.json({ booked: bookedTimes });
-} catch (err) {
+    const PUFFER = 15;                   // Unsichtbarer Puffer
+    const dauer = leistung.dauer;        // Reine Behandlungsdauer (Anzeige)
+    const blockDauer = dauer + PUFFER;   // Blockzeit im Backend
+
+    // Zeitbereich (Öffnungszeiten)
+    const day = new Date(date + "T00:00:00");
+    const open = new Date(day);  open.setHours(10,0,0,0);
+    const close = new Date(day); close.setHours(18,0,0,0);
+
+    // Bestehende Buchungen holen
+    const existing = bookingDao.getBookingsWithLeistungForDate(date).map(b => {
+      const start = new Date(b.datetime);
+      const end   = new Date(start.getTime() + (b.leistung_dauer + PUFFER) * 60000);
+      return { start, end };
+    });
+
+    function fmt(d) {
+      return d.toTimeString().slice(0,5);
+    }
+
+    const STEP = 15; // Schritte in Minuten
+    const blocked = [];
+
+    // Startzeiten prüfen
+    for (let t = new Date(open); t < close; t = new Date(t.getTime() + STEP * 60000)) {
+
+      const start = new Date(t);
+      const end   = new Date(start.getTime() + blockDauer * 60000);
+
+      // Über Ende der Öffnungszeit?
+      if (end > close) continue;
+
+      // Überlappungen prüfen
+      let overlaps = false;
+      for (let ex of existing) {
+        if (start < ex.end && end > ex.start) {
+          overlaps = true;
+          break;
+        }
+      }
+
+      if (overlaps) {
+        blocked.push(fmt(start));
+      }
+    }
+
+    return res.json({ booked: blocked });
+
+  } catch (err) {
     next(err);
   }
 };
