@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LEMA Beauty</title>
+  <link rel="stylesheet" href="css/beispiel-style.css" />
+  <link rel="stylesheet" href="css/leistungen.css" />
+</head>
+
+<body>
+  <header>
+    <div class="logo">
+      <img src="img/logo.png" alt="Firmenlogo">
+      </div>
+    <nav>
+      <ul>
+        <li><a href="index.html">Start</a></li>
+        <li><a href="leistungen.html">Leistungen</a></li>
+        <li><a href="kontakt.html">Kontakt</a></li>
+      </ul>
+    </nav>
+  </header>
+
+
+<main class="leistungen">
+
+    <h1>Leistungen</h1>
+    <p class="intro">Hier finden Sie eine Übersicht über unsere Beauty-Behandlungen.</p>
+
+    <!-- Dynamische Leistungen hier -->
+    <div id="leistungen-container"></div>
+
+</main>
+
+<footer>
+    <div class="footer-content">
+        <p>LEMA Beauty / Königstraße 1 / 70173 Stuttgart</p>
+        <p>Tel: 0711 1234567 / <a href="impressum.html">Impressum</a></p>
+        <p>&copy; 2024 LEMA Beauty. Alle Rechte vorbehalten.</p>
+    </div>
+</footer>
+
+
+<script>
+async function loadLeistungen() {
+  try {
+    const response = await fetch("http://localhost:8000/api/leistung");
+    const data = await response.json();
+
+    const container = document.getElementById("leistungen-container");
+    container.innerHTML = ""; // clear
+
+    data.forEach(leistung => {
+      const div = document.createElement("div");
+      div.classList.add("service");  // alte Klasse -> behält Design
+
+      // Falls kein Bild in DB vorhanden → Standard-Bild
+      const bild = leistung.bild ? leistung.bild : "placeholder.jpg";
+
+      div.innerHTML = `
+        <img src="img/${bild}" alt="${leistung.name}">
+        <div class="service-info">
+          <h2>${leistung.name}</h2>
+          <p>${leistung.beschreibung}</p>
+          <p>${leistung.dauer} min<br>${leistung.preis} €</p>
+
+          <a href="buchen.html?leistung_id=${leistung.id}" class="button">buchen</a>
+        </div>
+      `;
+
+      container.appendChild(div);
+    });
+
+  } catch (err) {
+    console.error("Fehler beim Laden der Leistungen:", err);
+  }
+}
+
+document.addEventListener("DOMContentLoaded", loadLeistungen);
+</script>
+</body>
+</html>

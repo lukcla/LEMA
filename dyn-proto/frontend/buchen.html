@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LEMA Beauty</title>
+
+  <link rel="stylesheet" href="css/beispiel-style.css" />
+  <link rel="stylesheet" href="css/buchen.css" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Chiron+Sung+HK:wght@200;400;600;900&family=EB+Garamond:wght@400;600;700&display=swap" rel="stylesheet">
+
+</head>
+
+<body>
+  <header>
+    <div class="logo">
+      <img src="img/logo.png" alt="Firmenlogo">
+    </div>
+    <nav>
+      <ul>
+        <li><a href="index.html">Start</a></li>
+        <li><a href="leistungen.html">Leistungen</a></li>
+        <li><a href="kontakt.html">Kontakt</a></li>
+      </ul>
+    </nav>
+  </header>
+
+<main>
+    <h1>Termin buchen</h1>
+    <p>Bitte wählen Sie Ihren gewünschten Termin. Wir freuen uns darauf, Ihnen eine wohltuende Behandlung zu ermöglichen.</p>
+    <h2>Achtung: Die Zahlung erfolgt ausschließlich vor Ort, bequem in bar oder mit Karte.</h2>
+
+    <!-- Leistungsdetails -->
+    <section class="leistungsdetails-box">
+      <h2>Ihre gewählte Behandlung</h2>
+
+      <p><span id="leistung-name"></span></p>
+      <p><span id="leistung-beschreibung"></span></p>
+      <p><strong>Dauer:</strong> <span id="leistung-dauer"></span></p>
+      <p><strong>Preis:</strong> <span id="leistung-preis"></span></p>
+
+      <!-- Hidden Inputs -->
+      <input type="hidden" name="leistungName" id="leistungName_hidden">
+      <input type="hidden" name="leistungBeschreibung" id="leistungBeschreibung_hidden">
+      <input type="hidden" name="leistungDauer" id="leistungDauer_hidden">
+      <input type="hidden" name="leistungPreis" id="leistungPreis_hidden">
+    </section>
+    <input type="hidden" id="leistung_id">
+
+
+<!-- EIN gemeinsames Formular -->
+<form id="bookingForm">
+  <div class="buchungsbereich">
+
+    <!-- Linke Seite -->
+    <div class="kundendaten">
+      <h2>Ihre Daten</h2>
+
+      <label>Vorname</label>
+      <input type="text" name="vorname" required>
+
+      <label>Nachname</label>
+      <input type="text" name="nachname" required>
+
+      <label>E-Mail</label>
+      <input type="email" name="email" required>
+
+      <label>Telefonnummer</label>
+      <input type="tel" name="telefon" required>
+
+      <input type="hidden" id="selectedDate" name="date">
+      <input type="hidden" id="selectedTime" name="time">
+      <input type="hidden" id="dauerHidden" name="dauer">
+    </div>
+
+
+    <!-- Rechte Seite: Kalender -->
+    <div class="buchungsdetails">
+      <h2>Datum & Uhrzeit wählen</h2>
+
+      <div class="kalender-container">
+        <div class="kalender-header">
+          <button class="nav-btn" id="prevMonth">❮</button>
+          <h3 id="monthYear"></h3>
+          <button class="nav-btn" id="nextMonth">❯</button>
+        </div>
+
+        <div class="wochentage">
+          <div>Mo</div><div>Di</div><div>Mi</div><div>Do</div><div>Fr</div><div>Sa</div><div>So</div>
+        </div>
+
+        <div class="tage" id="kalenderTage"></div>
+      </div>
+
+      <label>Verfügbare Zeiten:</label>
+      <div id="slot-grid" class="timeslots"></div>
+
+      <!-- Jetzt buchen -->
+      <button id="submitBtn"
+              type="submit"
+              disabled
+              style="opacity:0.4; cursor:not-allowed;
+              width:100%; margin-top:20px; padding:14px;
+              border:none; background:#d18e89; color:white;
+              font-size:17px; border-radius:10px;">
+              Jetzt buchen
+      </button>
+
+    </div>
+  </div>
+
+</form> 
+</main>
+
+
+<footer>
+  <div class="footer-content">
+    <p>LEMA Beauty / Königstraße 1 / 70182 Stuttgart</p>
+    <p>Tel: 0711 1234567 / <a href="impressum.html">Impressum</a></p>
+    <p>&copy; 2025 made by LEMA</p>
+  </div>
+</footer>
+
+
+
+<script>
+// ----------------------
+//  LEISTUNG PER API LADEN
+// ----------------------
+
+// Standardwert, wird gleich überschrieben:
+let serviceDuration = 30;
+
+async function loadLeistung() {
+  const params = new URLSearchParams(window.location.search);
+  const id = params.get("leistung_id");
+
+  if (!id) {
+    alert("Keine Leistung ausgewählt.");
+    return;
+  }
+
+  try {
+    const response = await fetch("http://localhost:8000/api/leistung/" + id);
+    const leistung = await response.json();
+
+    // Sichtbare Infos setzen
+    document.getElementById("leistung-name").textContent = leistung.name;
+    document.getElementById("leistung-beschreibung").textContent = leistung.beschreibung;
+    document.getElementById("leistung-dauer").textContent = leistung.dauer + " min";
+    document.getElementById("leistung-preis").textContent = leistung.preis + " €";
+
+    // Hidden-Felder (falls du sie weiter nutzen willst)
+    document.getElementById("leistungName_hidden").value = leistung.name;
+    document.getElementById("leistungBeschreibung_hidden").value = leistung.beschreibung;
+    document.getElementById("leistungDauer_hidden").value = leistung.dauer + " min";
+    document.getElementById("leistungPreis_hidden").value = leistung.preis + " €";
+
+    // Id speichern für die Buchung
+    document.getElementById("leistung_id").value = leistung.id;
+
+    // Dauer in Minuten -> wichtig für Slots
+    serviceDuration = leistung.dauer;
+    document.getElementById("dauerHidden").value = serviceDuration;
+
+  } catch (error) {
+    console.error(error);
+    alert("Leistung konnte nicht geladen werden.");
+  }
+}
+
+// ----------------------
+//       KALENDER
+// ----------------------
+let today = new Date(); today.setHours(0,0,0,0);
+let currentMonth = today.getMonth();
+let currentYear = today.getFullYear();
+
+const kalenderTage = document.getElementById("kalenderTage");
+const monthYear = document.getElementById("monthYear");
+let selectedDate = null;
+
+const bookedDays = {}; // später aus DB
+
+
+function renderCalendar(){
+  kalenderTage.innerHTML = "";
+
+  const first = new Date(currentYear, currentMonth, 1);
+  const last = new Date(currentYear, currentMonth+1, 0);
+
+  monthYear.textContent = first.toLocaleString("de-DE", { month:"long", year:"numeric"});
+
+  const offset = (first.getDay()+6)%7;
+  for(let i=0;i<offset;i++){
+    kalenderTage.appendChild(document.createElement("div"));
+  }
+
+  for(let d=1; d<=last.getDate(); d++){
+    const date = new Date(currentYear, currentMonth, d);
+    const el = document.createElement("div");
+    el.textContent = d;
+    el.classList.add("tag");
+
+    const iso = date.toISOString().split("T")[0];
+    const isPast = date <= today;
+    const isToday = date.getTime() === today.getTime();
+    const isSunday = date.getDay() === 0;
+    const isBooked = bookedDays[iso];
+
+    if(isPast || isSunday || isToday || isBooked){
+      el.classList.add("disabled");
+    } else {
+      el.classList.add("verfuegbar");
+      el.addEventListener("click", ()=> selectDate(date, el));
+    }
+
+    kalenderTage.appendChild(el);
+  }
+}
+
+
+function selectDate(date, el){
+  document.querySelectorAll(".tag").forEach(t => t.classList.remove("selected"));
+  el.classList.add("selected");
+
+  selectedDate = date;
+  document.getElementById("selectedDate").value = date.toISOString().split("T")[0];
+
+  renderSlots();
+}
+
+
+
+// ----------------------
+//       ZEITSLOTS
+// ----------------------
+async function renderSlots(){
+  const grid = document.getElementById("slot-grid");
+  grid.innerHTML = "";
+
+  const date = document.getElementById("selectedDate").value;
+  if (!date) return;
+
+  // 1) Slots vom Backend holen
+  const response = await fetch(`http://localhost:8000/api/booking/slots?date=${date}`);
+  const data = await response.json();
+  const booked = data.booked; // ["14:00", "15:30"]
+
+  // 2) Alle möglichen Slots generieren (wie bisher)
+  let slots = [];
+  for(let h=10; h<18; h++){
+    for(let m=0; m<60; m+=serviceDuration){
+      let end = h + m/60 + serviceDuration/60;
+      if(end <= 18){
+        slots.push(`${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`);
+      }
+    }
+  }
+
+  // 3) Slots eintragen + booked deaktivieren
+  slots.forEach(time => {
+    const id = "slot_" + time.replace(":", "");
+
+    const input = document.createElement("input");
+    input.type = "radio";
+    input.name = "slotRadio";
+    input.value = time;
+    input.id = id;
+
+    // wenn bereits gebucht → deaktivieren + rot markieren
+    if (booked.includes(time)) {
+      input.disabled = true;
+    }
+
+    const label = document.createElement("label");
+    label.textContent = time;
+    label.setAttribute("for", id);
+
+    input.addEventListener("change", () => {
+        document.getElementById("selectedTime").value = time;
+
+        const btn = document.getElementById("submitBtn");
+        btn.disabled = false;
+        btn.style.opacity = "1";
+        btn.style.cursor = "pointer";
+    });
+
+    grid.appendChild(input);
+    grid.appendChild(label);
+  });
+}
+
+
+// Navigation
+document.getElementById("nextMonth").onclick = ()=>{
+  currentMonth++;
+  if(currentMonth>11){ currentMonth=0; currentYear++; }
+  renderCalendar();
+};
+
+document.getElementById("prevMonth").onclick = ()=>{
+  const isCurrent = currentMonth===today.getMonth() && currentYear===today.getFullYear();
+  if(!isCurrent){
+    currentMonth--;
+    if(currentMonth<0){ currentMonth=11; currentYear--; }
+    renderCalendar();
+  }
+};
+renderCalendar();
+
+
+// ----------------------
+//   BUCHUNG ABSENDEN
+// ----------------------
+async function submitBooking(event) {
+  event.preventDefault(); // kein normales Form-Submit
+
+  const vorname = document.querySelector('input[name="vorname"]').value;
+  const nachname = document.querySelector('input[name="nachname"]').value;
+  const email = document.querySelector('input[name="email"]').value;
+  const telefon = document.querySelector('input[name="telefon"]').value;
+
+  const leistung_id = document.getElementById("leistung_id").value;
+
+  const date = document.getElementById("selectedDate").value;
+  const time = document.getElementById("selectedTime").value;
+
+  if (!date || !time) {
+    alert("Bitte Datum und Uhrzeit wählen.");
+    return;
+  }
+
+  const datetime = `${date}T${time}`;
+
+  const body = {
+    vorname,
+    nachname,
+    email,
+    telefon,
+    leistung_id,
+    datetime
+  };
+
+  try {
+    const response = await fetch("http://localhost:8000/api/booking", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body)
+    });
+
+    const result = await response.json();
+
+    if (!response.ok) {
+      alert(result.error || "Fehler bei der Buchung.");
+      return;
+    }
+
+    // Weiterleitung zur Bestätigungsseite
+    window.location.href = `bestaetigung.html?bookingId=${result.bookingId}`;
+
+  } catch (error) {
+    console.error(error);
+    alert("Serverfehler.");
+  }
+}
+
+// Events registrieren
+document.addEventListener("DOMContentLoaded", () => {
+  loadLeistung(); // Leistung laden, sobald Seite fertig
+  document.getElementById("bookingForm").addEventListener("submit", submitBooking);
+});
+renderCalendar();
+</script>
+
+</body>
+</html>
