@@ -3,16 +3,16 @@ const router = express.Router();
 
 const bookingService = require('../services/booking.service');
 
-// POST -> neue Buchung speichern
-router.get('/slots', bookingService.getSlotsForDate);
+// Slots für ein Datum + Leistung abrufen
+router.get('/slots', bookingService.getSlots);
+
+// Neue Buchung speichern
 router.post('/', bookingService.createBooking);
 
-// GET -> Buchung anzeigen
+// Buchung nach ID abrufen
 router.get('/:id', bookingService.getBookingById);
 
 module.exports = router;
-
-router.get("/slots", bookingService.getSlots);
 
 
 // was passiert jetzt? user klickt auf ein datum, frontend ruft "/api/booking/slots?date=..." auf,
