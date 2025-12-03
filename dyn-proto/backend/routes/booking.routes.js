@@ -12,6 +12,8 @@ router.get('/:id', bookingService.getBookingById);
 
 module.exports = router;
 
+router.get("/slots", bookingService.getSlots);
+
 
 // was passiert jetzt? user klickt auf ein datum, frontend ruft "/api/booking/slots?date=..." auf,
 // backend liefert so was wie: { "booked": ["14:00", "15:30"] }

@@ -1,19 +1,17 @@
 const bookingDao = require('../dao/booking.dao');
 const leistungDao = require('../dao/leistung.dao');
 
-// Hilfsfunktionen, (damit man zb. bei Telefonnr keine Buchstaben eingeben kann usw.)
+// Validierungshilfen
 function isNotEmpty(value) {
   return value !== undefined && value !== null && value.toString().trim() !== "";
 }
 
 function isValidEmail(email) {
-  const regex = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
-  return regex.test(email);
+  return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email);
 }
 
 function isValidPhone(phone) {
-  const regex = /^[0-9\-\+\s\(\)]{6,20}$/;
-  return regex.test(phone);
+  return /^[0-9\-\+\s\(\)]{6,20}$/.test(phone);
 }
 
 function isISODateTime(dt) {
@@ -21,77 +19,101 @@ function isISODateTime(dt) {
 }
 
 exports.createBooking = (req, res, next) => {
-  try {  
+  try {
     const b = req.body;
 
-  // 1) Pflichtfelder prüfen
-  if (
-    !isNotEmpty(b.vorname) ||
-    !isNotEmpty(b.nachname) ||
-    !isNotEmpty(b.email) ||
-    !isNotEmpty(b.leistung_id) ||
-    !isNotEmpty(b.datetime)
-  ) {
-    return res.status(400).json({ error: "Missing fields" });
-  }
+    // 1) Pflichtfelder
+    if (
+      !isNotEmpty(b.vorname) ||
+      !isNotEmpty(b.nachname) ||
+      !isNotEmpty(b.email) ||
+      !isNotEmpty(b.leistung_id) ||
+      !isNotEmpty(b.datetime)
+    ) {
+      return res.status(400).json({ error: "Missing fields" });
+    }
 
-  // 2) Email prüfen
-  if (!isValidEmail(b.email)) {
-    return res.status(400).json({ error: "Invalid email format" });
-  }
+    // 2) Email
+    if (!isValidEmail(b.email)) {
+      return res.status(400).json({ error: "Invalid email format" });
+    }
 
-  // 3) Telefon prüfen (optional)
-  if (b.telefon && !isValidPhone(b.telefon)) {
-    return res.status(400).json({ error: "Invalid phone format" });
-  }
+    // 3) Telefon
+    if (b.telefon && !isValidPhone(b.telefon)) {
+      return res.status(400).json({ error: "Invalid phone format" });
+    }
 
-  // 4) Leistung ID prüfen
-  if (isNaN(parseInt(b.leistung_id)) || parseInt(b.leistung_id) <= 0) {
-    return res.status(400).json({ error: "Invalid service id" });
-  }
+    // 4) Leistung prüfen
+    const leistung = leistungDao.getById(b.leistung_id);
+    if (!leistung) {
+      return res.status(404).json({ error: "Service not found" });
+    }
 
-  // 5) Leistung existiert?
-  const leistung = leistungDao.getById(b.leistung_id);
-  if (!leistung) {
-    return res.status(404).json({ error: "Service not found" });
-  }
+    // 5) Datumsformat prüfen
+    if (!isISODateTime(b.datetime)) {
+      return res.status(400).json({ error: "Invalid datetime" });
+    }
 
-  // 6) datetime prüfen
-  if (!isISODateTime(b.datetime)) {
-    return res.status(400).json({ error: "Invalid datetime" });
-  }
+    const startNew = new Date(b.datetime);
 
-  // 7) datetime muss in Zukunft liegen
-  const dt = new Date(b.datetime);
-  const now = new Date();
-  if (dt < now) {
-    return res.status(400).json({ error: "Date must be in the future" });
-  }
+    // 6) Datum darf nicht in der Vergangenheit liegen (Uhrzeit ignorieren)
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
 
-  // 8) Arbeitszeiten prüfen
-  const hour = dt.getHours();
-  if (hour < 10 || hour >= 18) {
-    return res.status(400).json({ error: "Outside working hours (10-18)" });
-  }
+    const bookingDate = new Date(startNew);
+    bookingDate.setHours(0, 0, 0, 0);
 
-  // 9) Slot bereits gebucht?
-  const slotCount = bookingDao.countByDateTime(b.datetime);
-  if (slotCount > 0) {
-    return res.status(409).json({ error: "Slot already booked" });
-  }
+    if (bookingDate < today) {
+      return res.status(400).json({ error: "date must be in the future" });
+    }
 
-  // 10) Buchung anlegen
-  const info = bookingDao.create({
-    vorname: b.vorname,
-    nachname: b.nachname,
-    email: b.email,
-    telefon: b.telefon || "",
-    leistung_id: b.leistung_id,
-    datetime: b.datetime
-  });
+    // 7) Öffnungszeiten (10–18 Uhr)
+    const hour = startNew.getHours();
+    if (hour < 10 || hour >= 18) {
+      return res.status(400).json({ error: "Outside working hours (10–18)" });
+    }
 
-  return res.status(201).json({ bookingId: info.lastInsertRowid });
-}   catch (err) {
+    const PUFFER_MIN = 15;
+    const dauerMinuten = leistung.dauer;
+
+    // 8) Endzeit inkl. Puffer
+    const endNew = new Date(startNew.getTime() + (dauerMinuten + PUFFER_MIN) * 60000);
+
+    // 9) Existierende Buchungen des Tages laden (inkl. deren Dauer)
+    const dayStr = startNew.toISOString().slice(0, 10);
+    const existing = bookingDao.getBookingsWithLeistungForDate(dayStr);
+
+    for (let ex of existing) {
+      const startEx = new Date(ex.datetime);
+      const endEx = new Date(startEx.getTime() + (ex.leistung_dauer + PUFFER_MIN) * 60000);
+
+      const overlap = (startNew < endEx) && (endNew > startEx);
+      if (overlap) {
+        return res.status(409).json({
+          error: "Dieser Zeitraum überschneidet sich mit einer bestehenden Buchung."
+        });
+      }
+    }
+
+    // 10) Optional: exakten Slot nochmal prüfen
+    const slotCount = bookingDao.countByDateTime(b.datetime);
+    if (slotCount > 0) {
+      return res.status(409).json({ error: "Slot already booked" });
+    }
+
+    // 11) Buchung speichern
+    const info = bookingDao.create({
+      vorname: b.vorname,
+      nachname: b.nachname,
+      email: b.email,
+      telefon: b.telefon || "",
+      leistung_id: b.leistung_id,
+      datetime: b.datetime
+    });
+
+    return res.status(201).json({ bookingId: info.lastInsertRowid });
+
+  } catch (err) {
     next(err);
   }
 };
