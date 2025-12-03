@@ -127,12 +127,10 @@
 
 
 <script>
-// ----------------------
-//  LEISTUNG PER API LADEN
-// ----------------------
-
-// Standardwert, wird gleich überschrieben:
+// leistungen laden
 let serviceDuration = 30;
+let selectedDate = null;
+let selectedService = null;
 
 async function loadLeistung() {
   const params = new URLSearchParams(window.location.search);
@@ -147,55 +145,43 @@ async function loadLeistung() {
     const response = await fetch("http://localhost:8000/api/leistung/" + id);
     const leistung = await response.json();
 
-    // Sichtbare Infos setzen
+    selectedService = leistung;
+
     document.getElementById("leistung-name").textContent = leistung.name;
     document.getElementById("leistung-beschreibung").textContent = leistung.beschreibung;
     document.getElementById("leistung-dauer").textContent = leistung.dauer + " min";
     document.getElementById("leistung-preis").textContent = leistung.preis + " €";
 
-    // Hidden-Felder (falls du sie weiter nutzen willst)
-    document.getElementById("leistungName_hidden").value = leistung.name;
-    document.getElementById("leistungBeschreibung_hidden").value = leistung.beschreibung;
-    document.getElementById("leistungDauer_hidden").value = leistung.dauer + " min";
-    document.getElementById("leistungPreis_hidden").value = leistung.preis + " €";
-
-    // Id speichern für die Buchung
     document.getElementById("leistung_id").value = leistung.id;
-
-    // Dauer in Minuten -> wichtig für Slots
     serviceDuration = leistung.dauer;
-    document.getElementById("dauerHidden").value = serviceDuration;
 
-  } catch (error) {
-    console.error(error);
+  } catch (err) {
+    console.error(err);
     alert("Leistung konnte nicht geladen werden.");
   }
 }
 
-// ----------------------
-//       KALENDER
-// ----------------------
-let today = new Date(); today.setHours(0,0,0,0);
+
+
+// schöner kalender
+let today = new Date();
+today.setHours(0,0,0,0);
 let currentMonth = today.getMonth();
 let currentYear = today.getFullYear();
 
 const kalenderTage = document.getElementById("kalenderTage");
 const monthYear = document.getElementById("monthYear");
-let selectedDate = null;
-
-const bookedDays = {}; // später aus DB
-
 
 function renderCalendar(){
   kalenderTage.innerHTML = "";
 
   const first = new Date(currentYear, currentMonth, 1);
-  const last = new Date(currentYear, currentMonth+1, 0);
+  const last  = new Date(currentYear, currentMonth + 1, 0);
 
   monthYear.textContent = first.toLocaleString("de-DE", { month:"long", year:"numeric"});
 
   const offset = (first.getDay()+6)%7;
-  for(let i=0;i<offset;i++){
+  for(let i=0; i<offset; i++){
     kalenderTage.appendChild(document.createElement("div"));
   }
 
@@ -205,13 +191,10 @@ function renderCalendar(){
     el.textContent = d;
     el.classList.add("tag");
 
-    const iso = date.toISOString().split("T")[0];
     const isPast = date <= today;
-    const isToday = date.getTime() === today.getTime();
     const isSunday = date.getDay() === 0;
-    const isBooked = bookedDays[iso];
 
-    if(isPast || isSunday || isToday || isBooked){
+    if (isPast || isSunday) {
       el.classList.add("disabled");
     } else {
       el.classList.add("verfuegbar");
@@ -222,7 +205,6 @@ function renderCalendar(){
   }
 }
 
-
 function selectDate(date, el){
   document.querySelectorAll(".tag").forEach(t => t.classList.remove("selected"));
   el.classList.add("selected");
@@ -230,94 +212,99 @@ function selectDate(date, el){
   selectedDate = date;
   document.getElementById("selectedDate").value = date.toISOString().split("T")[0];
 
-  renderSlots();
+  loadSlotsForDate();
 }
 
 
 
-// ----------------------
-//       ZEITSLOTS
-// ----------------------
-async function renderSlots(){
+// slots von backend laden
+async function loadSlotsForDate() {
+  const date = document.getElementById("selectedDate").value;
+  if (!date || !selectedService) return;
+
+  try {
+    const response = await fetch(
+      `http://localhost:8000/api/booking/slots?date=${date}&leistung_id=${selectedService.id}`
+    );
+
+    const data = await response.json();
+    const blocked = data.booked || [];
+
+    renderSlots(date, blocked);
+
+  } catch (err) {
+    console.error("Slots konnten nicht geladen werden:", err);
+  }
+}
+
+
+
+// slots in 15min-schritten
+function renderSlots(dateStr, blockedTimes) {
   const grid = document.getElementById("slot-grid");
   grid.innerHTML = "";
 
-  const date = document.getElementById("selectedDate").value;
-  if (!date) return;
+  const dauer = serviceDuration;
+  const STEP = 15;
 
-  // 1) Slots vom Backend holen
-  const response = await fetch(`http://localhost:8000/api/booking/slots?date=${date}`);
-  const data = await response.json();
-  const booked = data.booked; // ["14:00", "15:30"]
+  const day = new Date(dateStr + "T00:00:00");
+  const open = new Date(day);  open.setHours(10,0,0,0);
+  const close = new Date(day); close.setHours(18,0,0,0);
 
-  // 2) Alle möglichen Slots generieren (wie bisher)
-  let slots = [];
-  for(let h=10; h<18; h++){
-    for(let m=0; m<60; m+=serviceDuration){
-      let end = h + m/60 + serviceDuration/60;
-      if(end <= 18){
-        slots.push(`${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`);
-      }
-    }
+  function addMinutes(timeStr, minutes) {
+    const [h, m] = timeStr.split(":").map(Number);
+    const d = new Date();
+    d.setHours(h, m, 0, 0);
+    const d2 = new Date(d.getTime() + minutes * 60000);
+    return d2.toTimeString().slice(0,5);
   }
 
-  // 3) Slots eintragen + booked deaktivieren
-  slots.forEach(time => {
-    const id = "slot_" + time.replace(":", "");
+  for (let t = new Date(open); t < close; t = new Date(t.getTime() + STEP * 60000)) {
+
+    const startStr = t.toTimeString().slice(0,5);
+    const endStr   = addMinutes(startStr, dauer);
+
+    const endStrict = new Date(t.getTime() + dauer * 60000);
+    if (endStrict > close) continue;
+
+    const id = "slot_" + startStr.replace(":", "");
 
     const input = document.createElement("input");
     input.type = "radio";
     input.name = "slotRadio";
-    input.value = time;
+    input.value = startStr;
     input.id = id;
 
-    // wenn bereits gebucht → deaktivieren + rot markieren
-    if (booked.includes(time)) {
+    const label = document.createElement("label");
+    label.setAttribute("for", id);
+    label.textContent = `${startStr} - ${endStr}`;
+
+    if (blockedTimes.includes(startStr)) {
       input.disabled = true;
+      label.style.opacity = "0.5";
+      label.style.textDecoration = "line-through";
+      label.style.cursor = "not-allowed";
     }
 
-    const label = document.createElement("label");
-    label.textContent = time;
-    label.setAttribute("for", id);
-
     input.addEventListener("change", () => {
-        document.getElementById("selectedTime").value = time;
+      document.getElementById("selectedTime").value = startStr;
 
-        const btn = document.getElementById("submitBtn");
-        btn.disabled = false;
-        btn.style.opacity = "1";
-        btn.style.cursor = "pointer";
+      const btn = document.getElementById("submitBtn");
+      btn.disabled = false;
+      btn.style.opacity = "1";
+      btn.style.cursor = "pointer";
     });
 
     grid.appendChild(input);
     grid.appendChild(label);
-  });
+  }
 }
 
 
-// Navigation
-document.getElementById("nextMonth").onclick = ()=>{
-  currentMonth++;
-  if(currentMonth>11){ currentMonth=0; currentYear++; }
-  renderCalendar();
-};
 
-document.getElementById("prevMonth").onclick = ()=>{
-  const isCurrent = currentMonth===today.getMonth() && currentYear===today.getFullYear();
-  if(!isCurrent){
-    currentMonth--;
-    if(currentMonth<0){ currentMonth=11; currentYear--; }
-    renderCalendar();
-  }
-};
-renderCalendar();
-
-
-// ----------------------
-//   BUCHUNG ABSENDEN
-// ----------------------
+// formular absenden
 async function submitBooking(event) {
-  event.preventDefault(); // kein normales Form-Submit
+  event.preventDefault();
 
   const vorname = document.querySelector('input[name="vorname"]').value;
   const nachname = document.querySelector('input[name="nachname"]').value;
@@ -325,7 +312,6 @@ async function submitBooking(event) {
   const telefon = document.querySelector('input[name="telefon"]').value;
 
   const leistung_id = document.getElementById("leistung_id").value;
-
   const date = document.getElementById("selectedDate").value;
   const time = document.getElementById("selectedTime").value;
 
@@ -359,22 +345,42 @@ async function submitBooking(event) {
       return;
     }
 
-    // Weiterleitung zur Bestätigungsseite
     window.location.href = `bestaetigung.html?bookingId=${result.bookingId}`;
 
-  } catch (error) {
-    console.error(error);
+  } catch (err) {
+    console.error(err);
     alert("Serverfehler.");
   }
 }
 
-// Events registrieren
+
+
+// seite initialisieren
 document.addEventListener("DOMContentLoaded", () => {
-  loadLeistung(); // Leistung laden, sobald Seite fertig
+  loadLeistung();
   document.getElementById("bookingForm").addEventListener("submit", submitBooking);
 });
+
+
+// monatswechsel
+document.getElementById("nextMonth").onclick = ()=>{
+  currentMonth++;
+  if(currentMonth>11){ currentMonth=0; currentYear++; }
+  renderCalendar();
+};
+
+document.getElementById("prevMonth").onclick = ()=>{
+  const isCurrent = currentMonth===today.getMonth() && currentYear===today.getFullYear();
+  if(!isCurrent){
+    currentMonth--;
+    if(currentMonth<0){ currentMonth=11; currentYear--; }
+    renderCalendar();
+  }
+};
+
 renderCalendar();
 </script>
+
 
 </body>
 </html>
