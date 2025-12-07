@@ -1,5 +1,6 @@
 Backend startet:
 npm start
+node server.js 
 
 Ordnerstruktur:
 - dao: Datenbankzugriff
@@ -8,7 +9,7 @@ Ordnerstruktur:
 - db: Datenbankdateien
 
 Server hört auf Port 8000
-
+_________________________________
 
 Frontend starten (Port 3000): 
 cd frontend
