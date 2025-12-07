@@ -60,16 +60,32 @@
       <h2>Ihre Daten</h2>
 
       <label>Vorname</label>
-      <input type="text" name="vorname" required>
+      <input type="text" name="vorname" 
+       placeholder="Vorname" 
+       required
+       pattern="[A-Za-zÄÖÜäöüß\s\-]+"
+       title="Bitte nur Buchstaben eingeben.">
 
       <label>Nachname</label>
-      <input type="text" name="nachname" required>
+      <input type="text" name="nachname" 
+       placeholder="Nachname" 
+       required
+       pattern="[A-Za-zÄÖÜäöüß\s\-]+"
+       title="Bitte nur Buchstaben eingeben.">
 
       <label>E-Mail</label>
-      <input type="email" name="email" required>
+      <input type="email" name="email"
+       placeholder="E-Mail"
+       required
+       pattern="^[^\s@]+@[^\s@]+\.[^\s@]{2,}$"
+       title="Bitte eine gültige E-Mail-Adresse eingeben.">
 
       <label>Telefonnummer</label>
-      <input type="tel" name="telefon" required>
+      <input type="text" name="telefon"
+       placeholder="Telefon"
+       required
+       pattern="[0-9+\s()\-]+"
+       title="Bitte eine gültige Telefonnummer eingeben.">
 
       <input type="hidden" id="selectedDate" name="date">
       <input type="hidden" id="selectedTime" name="time">
@@ -210,8 +226,11 @@ function selectDate(date, el){
   el.classList.add("selected");
 
   selectedDate = date;
-  document.getElementById("selectedDate").value = date.toISOString().split("T")[0];
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
 
+  document.getElementById("selectedDate").value = `${year}-${month}-${day}`;
   loadSlotsForDate();
 }
 
@@ -261,7 +280,9 @@ function renderSlots(dateStr, blockedTimes) {
 
   for (let t = new Date(open); t < close; t = new Date(t.getTime() + STEP * 60000)) {
 
-    const startStr = t.toTimeString().slice(0,5);
+    t.setSeconds(0,0);  // <<< WICHTIG!
+
+    const startStr = `${String(t.getHours()).padStart(2,'0')}:${String(t.getMinutes()).padStart(2,'0')}`;
     const endStr   = addMinutes(startStr, dauer);
 
     const endStrict = new Date(t.getTime() + dauer * 60000);
@@ -279,6 +300,7 @@ function renderSlots(dateStr, blockedTimes) {
     label.setAttribute("for", id);
     label.textContent = `${startStr} - ${endStr}`;
 
+    // <<< HIER funktioniert es jetzt immer:
     if (blockedTimes.includes(startStr)) {
       input.disabled = true;
       label.style.opacity = "0.5";
@@ -297,7 +319,7 @@ function renderSlots(dateStr, blockedTimes) {
 
     grid.appendChild(input);
     grid.appendChild(label);
-  }
+}
 }
 
 

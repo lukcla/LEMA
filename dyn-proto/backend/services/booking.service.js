@@ -11,11 +11,15 @@ function isValidEmail(email) {
 }
 
 function isValidPhone(phone) {
-  return /^[0-9\-\+\s\(\)]{6,20}$/.test(phone);
+  return /^[0-9+\s()\-]{5,20}$/.test(phone);
 }
 
 function isISODateTime(dt) {
   return !isNaN(Date.parse(dt));
+}
+
+function isAlpha(str) {
+  return /^[A-Za-zÄÖÜäöüß\s\-]+$/.test(str);
 }
 
 exports.createBooking = (req, res, next) => {
@@ -30,17 +34,21 @@ exports.createBooking = (req, res, next) => {
       !isNotEmpty(b.leistung_id) ||
       !isNotEmpty(b.datetime)
     ) {
-      return res.status(400).json({ error: "Missing fields" });
+      return res.status(400).json({ error: "Alle Felder müssen ausgefüllt sein" });
+    }
+
+    if (!isAlpha(b.vorname) || !isAlpha(b.nachname)) {
+    return res.status(400).json({ error: "Name darf nur Buchstaben enthalten." });
     }
 
     // 2) Email
     if (!isValidEmail(b.email)) {
-      return res.status(400).json({ error: "Invalid email format" });
+      return res.status(400).json({ error: "Bitte überprüfen Sie die Emailadresse" });
     }
 
     // 3) Telefon
-    if (b.telefon && !isValidPhone(b.telefon)) {
-      return res.status(400).json({ error: "Invalid phone format" });
+    if (!isValidPhone(b.telefon)) {
+    return res.status(400).json({ error: "Bitte überprüfen Sie die Telefonnummer." });
     }
 
     // 4) Leistung prüfen
@@ -51,7 +59,7 @@ exports.createBooking = (req, res, next) => {
 
     // 5) Datumsformat prüfen
     if (!isISODateTime(b.datetime)) {
-      return res.status(400).json({ error: "Invalid datetime" });
+      return res.status(400).json({ error: "ungültiges Datum" });
     }
 
     const startNew = new Date(b.datetime);
@@ -64,13 +72,13 @@ exports.createBooking = (req, res, next) => {
     bookingDate.setHours(0, 0, 0, 0);
 
     if (bookingDate < today) {
-      return res.status(400).json({ error: "date must be in the future" });
+      return res.status(400).json({ error: "Das Datum muss in der Zukunft liegen" });
     }
 
     // 7) Öffnungszeiten (10–18 Uhr)
     const hour = startNew.getHours();
     if (hour < 10 || hour >= 18) {
-      return res.status(400).json({ error: "Outside working hours (10–18)" });
+      return res.status(400).json({ error: "Außerhalb der Öffnungszeiten (10–18)" });
     }
 
     const PUFFER_MIN = 15;
@@ -98,7 +106,7 @@ exports.createBooking = (req, res, next) => {
     // 10) Optional: exakten Slot nochmal prüfen
     const slotCount = bookingDao.countByDateTime(b.datetime);
     if (slotCount > 0) {
-      return res.status(409).json({ error: "Slot already booked" });
+      return res.status(409).json({ error: "Zeitraum ist schon belegt" });
     }
 
     // 11) Buchung speichern
@@ -125,7 +133,7 @@ exports.getBookingById = (req, res, next) => {
   const booking = bookingDao.getById(id);
 
   if (!booking) {
-    return res.status(404).json({ error: "Booking not found" });
+    return res.status(404).json({ error: "Buchung nicht gefunden" });
   }
 
   // Datum formatieren
@@ -155,6 +163,7 @@ exports.getBookingById = (req, res, next) => {
 
 // Neue Slot-API: Dauer-Behandlung + 15 Min Puffer
 
+// GET /api/booking/slots?date=YYYY-MM-DD&leistung_id=ID
 exports.getSlots = (req, res, next) => {
   try {
     const date = req.query.date;
@@ -169,42 +178,44 @@ exports.getSlots = (req, res, next) => {
       return res.status(404).json({ error: "Leistung nicht gefunden" });
     }
 
-    const PUFFER = 15;                   // Unsichtbarer Puffer
-    const dauer = leistung.dauer;        // Reine Behandlungsdauer (Anzeige)
-    const blockDauer = dauer + PUFFER;   // Blockzeit im Backend
+    const PUFFER = 15;                  // unsichtbarer Puffer
+    const dauerAnzeige = leistung.dauer; // reine Behandlungsdauer
+    const blockDauer = dauerAnzeige + PUFFER; // Blockzeit im Backend
 
-    // Zeitbereich (Öffnungszeiten)
     const day = new Date(date + "T00:00:00");
-    const open = new Date(day);  open.setHours(10,0,0,0);
-    const close = new Date(day); close.setHours(18,0,0,0);
+    const open = new Date(day);  open.setHours(10, 0, 0, 0);
+    const close = new Date(day); close.setHours(18, 0, 0, 0);
 
-    // Bestehende Buchungen holen
+    // alle Buchungen des Tages mit jeweiliger Leistungsdauer
     const existing = bookingDao.getBookingsWithLeistungForDate(date).map(b => {
       const start = new Date(b.datetime);
-      const end   = new Date(start.getTime() + (b.leistung_dauer + PUFFER) * 60000);
+      start.setSeconds(0, 0);
+      const end = new Date(start.getTime() + (b.leistung_dauer + PUFFER) * 60000);
       return { start, end };
     });
 
-    function fmt(d) {
-      return d.toTimeString().slice(0,5);
-    }
-
-    const STEP = 15; // Schritte in Minuten
+    const STEP = 15;
     const blocked = [];
 
-    // Startzeiten prüfen
+    function fmt(d) {
+      const h = String(d.getHours()).padStart(2, "0");
+      const m = String(d.getMinutes()).padStart(2, "0");
+      return `${h}:${m}`;
+    }
+
     for (let t = new Date(open); t < close; t = new Date(t.getTime() + STEP * 60000)) {
+      t.setSeconds(0, 0);
 
       const start = new Date(t);
-      const end   = new Date(start.getTime() + blockDauer * 60000);
+      const endBlock = new Date(start.getTime() + blockDauer * 60000);
 
-      // Über Ende der Öffnungszeit?
-      if (end > close) continue;
+      // wenn Anzeige-Ende schon außerhalb der Öffnungszeit wäre → überspringen
+      const endAnzeige = new Date(start.getTime() + dauerAnzeige * 60000);
+      if (endAnzeige > close) continue;
 
-      // Überlappungen prüfen
       let overlaps = false;
-      for (let ex of existing) {
-        if (start < ex.end && end > ex.start) {
+      for (const ex of existing) {
+        if (start < ex.end && endBlock > ex.start) {
           overlaps = true;
           break;
         }
@@ -218,6 +229,7 @@ exports.getSlots = (req, res, next) => {
     return res.json({ booked: blocked });
 
   } catch (err) {
+    console.error(err);
     next(err);
   }
 };
