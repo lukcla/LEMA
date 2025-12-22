@@ -386,20 +386,38 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
 // monatswechsel
-document.getElementById("nextMonth").onclick = ()=>{
+document.getElementById("nextMonth").onclick = () => {
   currentMonth++;
-  if(currentMonth>11){ currentMonth=0; currentYear++; }
+  if (currentMonth > 11) {
+    currentMonth = 0;
+    currentYear++;
+  }
   renderCalendar();
+  clearSlots();
 };
 
-document.getElementById("prevMonth").onclick = ()=>{
-  const isCurrent = currentMonth===today.getMonth() && currentYear===today.getFullYear();
-  if(!isCurrent){
-    currentMonth--;
-    if(currentMonth<0){ currentMonth=11; currentYear--; }
-    renderCalendar();
+document.getElementById("prevMonth").onclick = () => {
+  currentMonth--;
+  if (currentMonth < 0) {
+    currentMonth = 11;
+    currentYear--;
   }
+  renderCalendar();
+  clearSlots();
 };
+
+// feedback: Zeiten sollen verschwinden, wenn man den Monat blättert 
+function clearSlots() {
+  const grid = document.getElementById("slot-grid");
+  if (grid) grid.innerHTML = "";
+
+  document.getElementById("selectedTime").value = "";
+
+  const btn = document.getElementById("submitBtn");
+  btn.disabled = true;
+  btn.style.opacity = "0.4";
+  btn.style.cursor = "not-allowed";
+}
 
 </script>
 

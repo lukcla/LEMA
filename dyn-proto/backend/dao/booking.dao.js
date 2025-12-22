@@ -1,22 +1,23 @@
-const BetterSqlite3 = require("better-sqlite3");
-const path = require("path");
+// const BetterSqlite3 = require("better-sqlite3");
+// const path = require("path");
 
 // DB verbinden
-const db = new BetterSqlite3(path.join(__dirname, "..", "db", "database.sqlite"));
+// const db = new BetterSqlite3(path.join(__dirname, "..", "db", "database.sqlite"));
 
+const db = require('../db/db');
 
 // Buchung anlegen
-exports.create = ({ vorname, nachname, email, telefon, leistung_id, datetime }) => {
+function create({ vorname, nachname, email, telefon, leistung_id, datetime }) {
   const stmt = db.prepare(`
-      INSERT INTO Booking (vorname, nachname, email, telefon, leistung_id, datetime)
-      VALUES (?, ?, ?, ?, ?, ?)
+    INSERT INTO Booking (vorname, nachname, email, telefon, leistung_id, datetime)
+    VALUES (?, ?, ?, ?, ?, ?)
   `);
   return stmt.run(vorname, nachname, email, telefon, leistung_id, datetime);
-};
+}
 
 
 // Einzelne Buchung + Leistungsdetails laden
-exports.getById = (id) => {
+function getById(id) {  
   const stmt = db.prepare(`
       SELECT 
         b.*,
@@ -32,29 +33,31 @@ exports.getById = (id) => {
 
 
 // Anzahl exakter Buchungen zu einem datetime
-exports.countByDateTime = (datetime) => {
+function countByDateTime(datetime) {
   const stmt = db.prepare(`
       SELECT COUNT(*) AS cnt
       FROM Booking
       WHERE datetime = ?
   `);
   return stmt.get(datetime).cnt;
-};
+}
 
 
 // Alle Datumswerte eines Tages (optional genutzt)
-exports.getByDate = (dateOnly) => {
+function getByDate(dateOnly) {
   const stmt = db.prepare(`
       SELECT datetime
       FROM Booking
       WHERE DATE(datetime) = DATE(?)
   `);
   return stmt.all(dateOnly);
-};
+}
+
 
 
 // NEU: Alle Buchungen eines Tages + jeweilige Leistungsdauer
-exports.getBookingsWithLeistungForDate = (date) => {
+
+function getBookingsWithLeistungForDate(date) {
   const stmt = db.prepare(`
       SELECT b.*, l.dauer AS leistung_dauer
       FROM Booking b
@@ -62,4 +65,30 @@ exports.getBookingsWithLeistungForDate = (date) => {
       WHERE DATE(b.datetime) = DATE(?)
   `);
   return stmt.all(date);
+}
+
+
+// feedback: backend soll auch löschen, anzeigen, ändern können
+// CRUD für booking 
+function getAll() {
+  return db.prepare(`
+    SELECT b.*, l.name AS leistung_name
+    FROM Booking b
+    JOIN Leistung l ON b.leistung_id = l.id
+    ORDER BY b.datetime
+  `).all();
+}
+
+function remove(id) {
+  return db.prepare("DELETE FROM Booking WHERE id = ?").run(id);
+}
+
+module.exports = {
+  create,
+  getById,
+  countByDateTime,
+  getByDate,
+  getBookingsWithLeistungForDate,
+  getAll,
+  remove
 };

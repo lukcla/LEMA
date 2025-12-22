@@ -19,7 +19,7 @@ function isISODateTime(dt) {
 }
 
 function isAlpha(str) {
-  return /^[A-Za-zÄÖÜäöüß\s\-]+$/.test(str);
+  return /^[\p{L}\s\-]+$/u.test(str);
 }
 
 exports.createBooking = (req, res, next) => {
@@ -47,7 +47,7 @@ exports.createBooking = (req, res, next) => {
     }
 
     // 3) Telefon
-    if (!isValidPhone(b.telefon)) {
+    if (isNotEmpty(b.telefon) && !isValidPhone(b.telefon)) {
     return res.status(400).json({ error: "Bitte überprüfen Sie die Telefonnummer." });
     }
 
@@ -103,7 +103,7 @@ exports.createBooking = (req, res, next) => {
       }
     }
 
-    // 10) Optional: exakten Slot nochmal prüfen
+    // 10) exakten Slot nochmal prüfen
     const slotCount = bookingDao.countByDateTime(b.datetime);
     if (slotCount > 0) {
       return res.status(409).json({ error: "Zeitraum ist schon belegt" });
@@ -161,32 +161,24 @@ exports.getBookingById = (req, res, next) => {
 
 
 
-// Neue Slot-API: Dauer-Behandlung + 15 Min Puffer
+// Neue Slot-API: Dauer-Behandlung + 15 Min Puffer falls sich jmd verspätet oder es länger dauert
 
-// GET /api/booking/slots?date=YYYY-MM-DD&leistung_id=ID
+// GET /api/booking/slots?date=YYYY-MM-DD
 exports.getSlots = (req, res, next) => {
   try {
     const date = req.query.date;
-    const leistungId = req.query.leistung_id;
 
-    if (!date || !leistungId) {
-      return res.status(400).json({ error: "date und leistung_id erforderlich" });
+    if (!date) {
+      return res.status(400).json({ error: "date erforderlich" });
     }
 
-    const leistung = leistungDao.getById(leistungId);
-    if (!leistung) {
-      return res.status(404).json({ error: "Leistung nicht gefunden" });
-    }
-
-    const PUFFER = 15;                  // unsichtbarer Puffer
-    const dauerAnzeige = leistung.dauer; // reine Behandlungsdauer
-    const blockDauer = dauerAnzeige + PUFFER; // Blockzeit im Backend
+    const PUFFER = 15;
 
     const day = new Date(date + "T00:00:00");
     const open = new Date(day);  open.setHours(10, 0, 0, 0);
     const close = new Date(day); close.setHours(18, 0, 0, 0);
 
-    // alle Buchungen des Tages mit jeweiliger Leistungsdauer
+    // bestehende Buchungen des Tages inkl. echter Dauer (+Puffer)
     const existing = bookingDao.getBookingsWithLeistungForDate(date).map(b => {
       const start = new Date(b.datetime);
       start.setSeconds(0, 0);
@@ -207,29 +199,36 @@ exports.getSlots = (req, res, next) => {
       t.setSeconds(0, 0);
 
       const start = new Date(t);
-      const endBlock = new Date(start.getTime() + blockDauer * 60000);
-
-      // wenn Anzeige-Ende schon außerhalb der Öffnungszeit wäre → überspringen
-      const endAnzeige = new Date(start.getTime() + dauerAnzeige * 60000);
-      if (endAnzeige > close) continue;
 
       let overlaps = false;
       for (const ex of existing) {
-        if (start < ex.end && endBlock > ex.start) {
+        if (start < ex.end && new Date(start.getTime() + STEP * 60000) > ex.start) {
           overlaps = true;
           break;
         }
       }
 
-      if (overlaps) {
-        blocked.push(fmt(start));
-      }
+      if (overlaps) blocked.push(fmt(start));
     }
 
     return res.json({ booked: blocked });
-
   } catch (err) {
     console.error(err);
     next(err);
   }
+};
+
+
+
+
+
+// feedback: backend soll auch löschen, anzeigen, ändern können
+exports.getAllBookings = (req, res) => {
+  const list = bookingDao.getAll();
+  res.json(list);
+};
+
+exports.deleteBooking = (req, res) => {
+  bookingDao.remove(req.params.id);
+  res.json({ success: true });
 };
