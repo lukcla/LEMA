@@ -1,7 +1,3 @@
-// const BetterSqlite3 = require("better-sqlite3");
-// const path = require("path");
-
-// const db = new BetterSqlite3(path.join(__dirname, "..", "db", "database.sqlite"));
 const db = require('../db/db');
 
 // Alle Leistungen
