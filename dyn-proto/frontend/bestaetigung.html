@@ -27,17 +27,25 @@
 
 
 <main>
-<h1>Vielen Dank für Ihre Buchung!</h1>
+  <h1>Vielen Dank für Ihre Buchung!</h1>
 
-<h2>Ihre Buchungsdetails</h2>
-<p><strong>Name:</strong> <span id="fullname"></span></p>
-<p><strong>E-Mail:</strong> <span id="email"></span></p>
-<p><strong>Telefon:</strong> <span id="telefon"></span></p>
-<p><strong>Datum:</strong> <span id="datum"></span></p>
-<p><strong>Uhrzeit:</strong> <span id="uhrzeit"></span></p>
-<p><strong>Dauer:</strong> <span id="dauer"></span> Minuten</p>
-<p><strong>Leistung:</strong> <span id="leistung"></span></p>
-<p><strong>Preis:</strong> <span id="preis"></span> €</p>
+  <!-- Fehlerbox unsichtbar) -->
+  <div id="bookingError" role="alert" style="display:none; margin-top:16px; padding:12px; border-radius:10px; background:#ffe6e6;">
+    <strong>Hinweis:</strong> <span id="bookingErrorText"></span>
+  </div>
+
+  <!-- Details -->
+  <section id="bookingDetails">
+    <h2>Ihre Buchungsdetails</h2>
+    <p><strong>Name:</strong> <span id="fullname"></span></p>
+    <p><strong>E-Mail:</strong> <span id="email"></span></p>
+    <p><strong>Telefon:</strong> <span id="telefon"></span></p>
+    <p><strong>Datum:</strong> <span id="datum"></span></p>
+    <p><strong>Uhrzeit:</strong> <span id="uhrzeit"></span></p>
+    <p><strong>Dauer:</strong> <span id="dauer"></span> Minuten</p>
+    <p><strong>Leistung:</strong> <span id="leistung"></span></p>
+    <p><strong>Preis:</strong> <span id="preis"></span> €</p>
+  </section>
 </main>
 
 
@@ -54,44 +62,52 @@
 
 
 <script>
+function showError(message) {
+  const box = document.getElementById("bookingError");
+  const text = document.getElementById("bookingErrorText");
+  const details = document.getElementById("bookingDetails");
+
+  text.textContent = message;
+  box.style.display = "block";
+  details.style.display = "none";
+}
+
 async function loadBooking() {
-  // 1) ID aus URL holen
   const params = new URLSearchParams(window.location.search);
   const id = params.get("bookingId");
 
   if (!id) {
-    alert("Keine Buchungs-ID angegeben.");
+    showError("Keine Buchungs-ID angegeben. Bitte prüfen Sie den Link.");
     return;
   }
 
   try {
-    // 2) Daten vom Backend abrufen
-    const response = await fetch("http://localhost:8000/api/booking/" + id);
-    const data = await response.json();
+    const response = await fetch("http://localhost:8000/api/booking/" + encodeURIComponent(id));
+
+    // JSON robust lesen (auch bei Fehlerantworten)
+    const data = await response.json().catch(() => null);
 
     if (!response.ok) {
-      document.body.innerHTML = "<h2>Buchung nicht gefunden.</h2>";
+      const msg = (data && data.error) ? data.error : "Buchung nicht gefunden.";
+      showError(msg);
       return;
     }
 
-    // 3) Daten eintragen
-    document.getElementById("fullname").textContent = data.vorname + " " + data.nachname;
-    document.getElementById("email").textContent = data.email;
-    document.getElementById("telefon").textContent = data.telefon;
-    document.getElementById("datum").textContent = data.datum;
-    document.getElementById("uhrzeit").textContent = data.uhrzeit;
-    document.getElementById("dauer").textContent = data.dauer;
-
-    document.getElementById("leistung").textContent = data.leistung;
-    document.getElementById("preis").textContent = data.preis;
+    document.getElementById("fullname").textContent = (data.vorname || "") + " " + (data.nachname || "");
+    document.getElementById("email").textContent = data.email || "-";
+    document.getElementById("telefon").textContent = (data.telefon && data.telefon.trim()) ? data.telefon : "-";
+    document.getElementById("datum").textContent = data.datum || "-";
+    document.getElementById("uhrzeit").textContent = data.uhrzeit || "-";
+    document.getElementById("dauer").textContent = data.dauer ?? "-";
+    document.getElementById("leistung").textContent = data.leistung || "-";
+    document.getElementById("preis").textContent = data.preis ?? "-";
 
   } catch (error) {
     console.error(error);
-    document.body.innerHTML = "<h2>Fehler beim Laden der Buchung.</h2>";
+    showError("Fehler beim Laden der Buchung. Bitte versuchen Sie es später erneut.");
   }
 }
 
-// Starten, wenn DOM geladen ist
 document.addEventListener("DOMContentLoaded", loadBooking);
 </script>
   

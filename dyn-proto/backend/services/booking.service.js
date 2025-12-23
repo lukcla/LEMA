@@ -229,6 +229,9 @@ exports.getAllBookings = (req, res) => {
 };
 
 exports.deleteBooking = (req, res) => {
-  bookingDao.remove(req.params.id);
+  const result = bookingDao.remove(req.params.id);
+  if (result.changes === 0) {
+    return res.status(404).json({ error: "Buchung nicht gefunden" });
+  }
   res.json({ success: true });
 };

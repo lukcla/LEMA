@@ -26,6 +26,9 @@ exports.updateLeistung = (req, res) => {
 
 // Leistung löschen
 exports.deleteLeistung = (req, res) => {
-  leistungDao.remove(req.params.id);
+  const result = leistungDao.remove(req.params.id);
+  if (result.changes === 0) {
+    return res.status(404).json({ error: "Leistung nicht gefunden" });
+  }
   res.json({ success: true });
 };
