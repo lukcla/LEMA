@@ -63,28 +63,28 @@
       <input type="text" name="vorname" 
        placeholder="Vorname" 
        required
-       pattern="[A-Za-zÄÖÜäöüß\s\-]+"
+       pattern="^[A-Za-zÀ-ÖØ-öø-ÿß\s\-]+$"
        title="Bitte nur Buchstaben eingeben.">
 
       <label>Nachname</label>
       <input type="text" name="nachname" 
        placeholder="Nachname" 
        required
-       pattern="[A-Za-zÄÖÜäöüß\s\-]+"
+       pattern="^[A-Za-zÀ-ÖØ-öø-ÿß\s\-]+$"
        title="Bitte nur Buchstaben eingeben.">
 
       <label>E-Mail</label>
       <input type="email" name="email"
        placeholder="E-Mail"
        required
-       pattern="^[^\s@]+@[^\s@]+\.[^\s@]{2,}$"
+       pattern="^[^\s@]+@[^\s@]+\.[a-zA-Z]{2,}$"
        title="Bitte eine gültige E-Mail-Adresse eingeben.">
 
       <label>Telefonnummer</label>
       <input type="text" name="telefon"
        placeholder="Telefon"
        required
-       pattern="[0-9+\s()\-]+"
+       pattern="^\+?[0-9\s()-]{7,20}$"
        title="Bitte eine gültige Telefonnummer eingeben.">
 
       <input type="hidden" id="selectedDate" name="date">
