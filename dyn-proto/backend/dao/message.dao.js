@@ -6,7 +6,7 @@
 const db = require('../db/db');
 
 //nachriten erstellen
-function createMessage({ name, email, nachricht }) {
+function create({ name, email, nachricht }) {
   //prüfung der pflicht feldern
   if (!name || !email || !nachricht) {
     throw new Error("Alle Felder müssen ausgefüllt sein");
@@ -20,17 +20,17 @@ function createMessage({ name, email, nachricht }) {
 }
 
 //alle nachrichten abrufen
-function getAllMessages() {
+function getAll() {
   return db.prepare("SELECT * FROM Message").all();
 }
 
 //einzelne nachriten abrufen
-function getMessageById(id) {
+function getById(id) {
   return db.prepare("SELECT * FROM Message WHERE id = ?").get(id);
 }
 
 //nachriten aktualisieren
-function updateMessage(id, data) {
+function update(id, data) {
   const { name, email, nachricht } = data;
   return db.prepare(`
     UPDATE Message
@@ -40,7 +40,7 @@ function updateMessage(id, data) {
 }
 
 //nachriten löschen
-function deleteMessage(id) {
+function remove(id) {
   const result = db.prepare("DELETE FROM Message WHERE id = ?").run(id);
   return result.changes;
 }
