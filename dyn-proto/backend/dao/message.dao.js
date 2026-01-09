@@ -47,9 +47,9 @@ function remove(id) {
 
 //export der funktionen
 module.exports = {
-  createMessage,
-  getAllMessages,
-  getMessageById,
-  updateMessage,
-  deleteMessage
+  create,
+  getAll,
+  getById,
+  update,
+  remove
 };
