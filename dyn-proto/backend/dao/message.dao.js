@@ -51,3 +51,5 @@ module.exports = {
   getAllMessages,
   getMessageById,
   updateMessage,
+  deleteMessage
+};
