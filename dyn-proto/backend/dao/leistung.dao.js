@@ -32,10 +32,22 @@ function remove(id) {
   return db.prepare("DELETE FROM Leistung WHERE id = ?").run(id);
 }
 
+function create({ name, beschreibung, dauer, preis, bild }) {
+  if(!name || !beschreibung || !dauer || !preis) {
+    throw new Error("Alle Pflichtfelder müssen ausgefüllt sein");
+  }
+  const stmt = db.prepare(`
+    INSERT INTO Leistung (name, beschreibung, dauer, preis, bild, created_at)
+    VALUES ( ?, ?, ?, ?, ?, datetime('now'))
+  `);
+  const result = stmt.run(name, beschreibung, dauer, preis, bild); 
+  return { id: result.lastInsertRowid, changes: result.changes };
+}
 
 module.exports = {
   getAll,
   getById,
+  create,
   update,
   remove
 };
