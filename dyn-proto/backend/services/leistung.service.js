@@ -18,6 +18,16 @@ exports.getLeistungById = (req, res) => {
   res.json(leistung);
 };
 
+// Neue Leistungen erstellen 
+exports.createLeistung = (req, res) => {
+  try {
+    const result = leistungDao.create(req.body);
+    res.status(201).json(result);
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+};
+ 
 // Leistung ändern
 exports.updateLeistung = (req, res) => {
   leistungDao.update(req.params.id, req.body);
