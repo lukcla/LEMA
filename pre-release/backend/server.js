@@ -1,8 +1,10 @@
 const express = require('express');
 const path = require('path');
+const app = express();
+app.use("/public", express.static(path.join(__dirname, "public")));
 const cors = require("cors");
 
-const app = express();
+
 
 // CORS aktivierenfür fetch von anderem Port
 app.use(cors());

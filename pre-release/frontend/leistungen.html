@@ -43,41 +43,53 @@
 
 
 <script>
-async function loadLeistungen() {
-  try {
-    const response = await fetch("http://localhost:8000/api/leistung");
-    const data = await response.json();
+  const BACKEND_BASE_URL = "http://localhost:8000";
 
-    const container = document.getElementById("leistungen-container");
-    container.innerHTML = ""; // clear
+  async function loadLeistungen() {
+    try {
+      const response = await fetch(`${BACKEND_BASE_URL}/api/leistung`);
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
+      }
 
-    data.forEach(leistung => {
-      const div = document.createElement("div");
-      div.classList.add("service");  // alte Klasse -> behält Design
+      const data = await response.json();
 
-      // Falls kein Bild in DB vorhanden → Standard-Bild
-      const bild = leistung.bild ? leistung.bild : "placeholder.jpg";
+      const container = document.getElementById("leistungen-container");
+      container.innerHTML = ""; // clear
 
-      div.innerHTML = `
-        <img src="img/${bild}" alt="${leistung.name}">
-        <div class="service-info">
-          <h2>${leistung.name}</h2>
-          <p>${leistung.beschreibung}</p>
-          <p>${leistung.dauer} min<br>${leistung.preis} €</p>
+      data.forEach((leistung) => {
+        const div = document.createElement("div");
+        div.classList.add("service"); // behält Design
 
-          <a href="buchen.html?leistung_id=${leistung.id}" class="button">buchen</a>
-        </div>
-      `;
+        // Dozentensicher: Bild kommt über JSON als bildUrl
+        const imgSrc = leistung.bildUrl
+          ? `${BACKEND_BASE_URL}${leistung.bildUrl}`
+          : "img/placeholder.jpg"; // Fallback, falls mal was fehlt
 
-      container.appendChild(div);
-    });
+        div.innerHTML = `
+          <img src="${imgSrc}" alt="${leistung.name}">
+          <div class="service-info">
+            <h2>${leistung.name}</h2>
+            <p>${leistung.beschreibung}</p>
+            <p>${leistung.dauer} min<br>${leistung.preis} €</p>
+            <a href="buchen.html?leistung_id=${leistung.id}" class="button">buchen</a>
+          </div>
+        `;
 
-  } catch (err) {
-    console.error("Fehler beim Laden der Leistungen:", err);
+        container.appendChild(div);
+      });
+
+    } catch (err) {
+      console.error("Fehler beim Laden der Leistungen:", err);
+
+      const container = document.getElementById("leistungen-container");
+      if (container) {
+        container.innerHTML = "<p>Leistungen konnten nicht geladen werden.</p>";
+      }
+    }
   }
-}
 
-document.addEventListener("DOMContentLoaded", loadLeistungen);
+  document.addEventListener("DOMContentLoaded", loadLeistungen);
 </script>
 </body>
 </html>

@@ -1,22 +1,33 @@
 const db = require('../db/db');
 
 // Alle Leistungen
-exports.all = () => {
-  return db.prepare("SELECT * FROM Leistung").all();
-};
+// exports.all = () => {
+//  return db.prepare("SELECT * FROM Leistung").all();
+//};
 
 // Eine Leistung nach ID
-exports.getById = (id) => {
-  return db.prepare("SELECT * FROM Leistung WHERE id = ?").get(id);
-};
+//exports.getById = (id) => {
+//  return db.prepare("SELECT * FROM Leistung WHERE id = ?").get(id);
+//};
 
 // feedback: backend soll auch löschen, alles anzeigen und ändern können:
 function getAll() {
-  return db.prepare("SELECT * FROM Leistung").all();
+  return db.prepare(`
+    SELECT
+      id, name, beschreibung, dauer, preis, bild,
+      '/public/leistungen/' || bild AS bildUrl
+    FROM Leistung
+  `).all();
 }
 
 function getById(id) {
-  return db.prepare("SELECT * FROM Leistung WHERE id = ?").get(id);
+  return db.prepare(`
+    SELECT
+      id, name, beschreibung, dauer, preis, bild,
+      '/public/leistungen/' || bild AS bildUrl
+    FROM Leistung
+    WHERE id = ?
+  `).get(id);
 }
 
 function update(id, data) {
@@ -47,6 +58,7 @@ function create({ name, beschreibung, dauer, preis, bild }) {
 module.exports = {
   getAll,
   getById,
+  create,
   update,
   remove
 };

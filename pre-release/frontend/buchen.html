@@ -81,11 +81,12 @@
        title="Bitte eine gültige E-Mail-Adresse eingeben.">
 
       <label>Telefonnummer</label>
-      <input type="text" name="telefon"
-       placeholder="Telefon"
-       required
-       pattern="^\+?[0-9\s()-]{7,20}$"
-       title="Bitte eine gültige Telefonnummer eingeben.">
+      <input
+      type="tel"
+      name="telefon"
+      id="telefon"
+      placeholder="Telefon"
+      required>
 
       <input type="hidden" id="selectedDate" name="date">
       <input type="hidden" id="selectedTime" name="time">
@@ -333,6 +334,11 @@ async function submitBooking(event) {
   const nachname = document.querySelector('input[name="nachname"]').value;
   const email = document.querySelector('input[name="email"]').value;
   const telefon = document.querySelector('input[name="telefon"]').value;
+
+  if (!telefon) {
+    alert("Bitte Telefonnummer eingeben.");
+    return;
+  }
 
   const leistung_id = document.getElementById("leistung_id").value;
   const date = document.getElementById("selectedDate").value;

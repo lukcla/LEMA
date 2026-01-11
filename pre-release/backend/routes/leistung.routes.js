@@ -7,5 +7,6 @@ router.get('/', leistungService.getAllLeistungen);
 router.get('/:id', leistungService.getLeistungById);
 router.put('/:id', leistungService.updateLeistung);
 router.delete('/:id', leistungService.deleteLeistung);
+router.post('/', leistungService.createLeistung);
 
 module.exports = router;
